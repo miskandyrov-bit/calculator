@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Калькулятор себестоимости</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: #f5f7fa; margin: 0; padding: 16px; display: flex; justify-content: center; }
+        .container { max-width: 700px; width: 100%; background: white; border-radius: 20px; padding: 20px 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        h1 { font-size: 22px; margin: 0 0 6px 0; color: #1a2634; }
+        .subtitle { font-size: 14px; color: #5a6b7c; margin-bottom: 20px; border-bottom: 1px solid #e9edf2; padding-bottom: 12px; }
+        .block { background: #f8faff; border-radius: 14px; padding: 16px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+        .block-title { font-weight: 600; font-size: 16px; color: #1a2634; margin-bottom: 12px; }
+        .row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 8px; }
+        .row label { font-size: 14px; color: #2d3a4a; min-width: 90px; }
+        .row input[type="text"] { flex: 1; min-width: 100px; padding: 10px 12px; border: 1px solid #ccd7e4; border-radius: 10px; font-size: 16px; background: white; }
+        .row input[type="text"]:focus { border-color: #3b7cff; outline: none; box-shadow: 0 0 0 3px rgba(59,124,255,0.15); }
+        .row input[type="text"]:disabled { background: #f0f3f8; color: #4b5a6b; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #3b7cff; cursor: pointer; }
+        .checkbox-row label { font-size: 15px; color: #1a2634; cursor: pointer; }
+        .result-block { background: #ffffff; border-radius: 14px; padding: 16px; border: 2px solid #dde4ed; margin-top: 8px; }
+        .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eef2f7; font-size: 15px; line-height: 1.4; }
+        .result-item:last-child { border-bottom: none; }
+        .result-item .label { color: #2d3a4a; flex: 1; padding-right: 8px; }
+        .result-item .value { font-weight: 600; color: #1a2634; white-space: nowrap; }
+        .result-item.total-tax .value { color: #d4380d; }
+        .result-item.net-profit .value { color: #1a9c4a; font-size: 17px; }
+        .separator { border-top: 2px solid #dde4ed; margin: 8px 0; }
+        .btn-row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; background: #eef2f7; color: #1a2634; }
+        .btn:active { background: #d5dce6; }
+        .btn-primary { background: #3b7cff; color: white; }
+        .btn-primary:active { background: #2a5fcc; }
+        .help-text { font-size: 14px; color: #5a6b7c; background: #f0f4fe; padding: 14px; border-radius: 12px; margin-top: 16px; border-left: 4px solid #3b7cff; line-height: 1.5; }
+        .help-text strong { color: #1a2634; }
+        @media (max-width: 480px) { body { padding: 8px; } .container { padding: 14px 10px; } .row label { min-width: 70px; font-size: 13px; } .row input[type="text"] { font-size: 15px; padding: 10px 8px; } .result-item { font-size: 14px; } .btn { font-size: 15px; padding: 14px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧾 Калькулятор себестоимости</h1>
+    <div class="subtitle">НДС 22% · Налог на прибыль 25%</div>
+
+    <!-- Покупка -->
+    <div class="block">
+        <div class="block-title">🛒 Покупка</div>
+        <div class="row">
+            <label>Цена с НДС</label>
+            <input type="text" id="purchase_nds" placeholder="0.00" inputmode="decimal"
+                   oninput="calculate()" onchange="calculate()">
+        </div>
+        <div class="row">
+            <label>Цена без НДС</label>
+            <input type="text" id="purchase_no_nds" placeholder="0.00" inputmode="decimal" disabled
+                   oninput="calculate()" onchange="calculate()">
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" id="purchase_has_nds" checked onchange="togglePurchase()">
+            <label for="purchase_has_nds">Цена включает НДС</label>
+        </div>
+    </div>
+
+    <!-- Продажа -->
+    <div class="block">
+        <div class="block-title">💰 Продажа</div>
+        <div class="row">
+            <label>Цена с НДС</label>
+            <input type="text" id="sale_nds" placeholder="0.00" inputmode="decimal"
+                   oninput="calculate()" onchange="calculate()">
+        </div>
+        <div class="row">
+            <label>Цена без НДС</label>
+            <input type="text" id="sale_no_nds" placeholder="0.00" inputmode="decimal" disabled
+                   oninput="calculate()" onchange="calculate()">
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" id="sale_has_nds" checked onchange="toggleSale()">
+            <label for="sale_has_nds">Цена включает НДС</label>
+        </div>
+    </div>
+
+    <!-- Результаты -->
+    <div class="result-block">
+        <div class="result-item"><span class="label">Цена покупки без НДС (себестоимость)</span><span class="value" id="res_purchase_no_nds">0.00</span></div>
+        <div class="result-item"><span class="label">Цена продажи без НДС (выручка)</span><span class="value" id="res_sale_no_nds">0.00</span></div>
+        <div class="separator"></div>
+        <div class="result-item"><span class="label">Прибыль до налогов</span><span class="value" id="res_profit">0.00</span></div>
+        <div class="result-item"><span class="label">Налог на прибыль (25%) – в бюджет</span><span class="value" id="res_profit_tax">0.00</span></div>
+        <div class="separator"></div>
+        <div class="result-item"><span class="label">НДС, полученный от покупателя</span><span class="value" id="res_nds_sale">0.00</span></div>
+        <div class="result-item"><span class="label">НДС, уплаченный поставщику (вычет)</span><span class="value" id="res_nds_purchase">0.00</span></div>
+        <div class="result-item"><span class="label">НДС к уплате в бюджет</span><span class="value" id="res_nds_payable">0.00</span></div>
+        <div class="separator"></div>
+        <div class="result-item total-tax"><span class="label">Итого всех налогов к уплате</span><span class="value" id="res_total_tax">0.00</span></div>
+        <div class="result-item net-profit"><span class="label">Чистая прибыль (НДС не вычитается)</span><span class="value" id="res_net_profit">0.00</span></div>
+    </div>
+
+    <!-- Кнопки -->
+    <div class="btn-row">
+        <button class="btn" onclick="resetAll()">Сбросить все</button>
+        <button class="btn" onclick="toggleHelp()">Помощь</button>
+    </div>
+
+    <!-- Справка -->
+    <div id="helpPanel" class="help-text" style="display: none;">
+        <strong>🔹 Простое объяснение</strong><br>
+        1. Введите цену покупки и продажи (с НДС или без – отметьте галочкой).<br>
+        2. Калькулятор покажет:<br>
+        • Вашу себестоимость и выручку без НДС.<br>
+        • Прибыль до налогов – ваш заработок до уплаты налогов.<br>
+        • Налог на прибыль (25%) – платите государству.<br>
+        • НДС с продажи – сколько вы получили от покупателя.<br>
+        • НДС с покупки – сколько вы заплатили поставщику (вычитается).<br>
+        • НДС к уплате – разница, которую перечисляете в бюджет.<br>
+        • Итого налогов – сумма налога на прибыль и НДС к уплате.<br>
+        • Чистая прибыль – то, что останется у вас <strong>после уплаты налога на прибыль</strong> (НДС не вычитается).<br><br>
+        <strong>💡 Пример:</strong> купили за 530 (с НДС), продали за 750 (с НДС).<br>
+        Прибыль ≈ 180 ₽, налог на прибыль ≈ 45 ₽, НДС к уплате ≈ 40 ₽,<br>
+        чистая прибыль ≈ 135 ₽, всего налогов ≈ 85 ₽.
+    </div>
+</div>
+
+<script>
+    // Глобальные константы
+    const NDS_RATE = 0.22;
+    const PROFIT_TAX_RATE = 0.25;
+
+    // Получаем элементы
+    const purchase_nds = document.getElementById('purchase_nds');
+    const purchase_no_nds = document.getElementById('purchase_no_nds');
+    const sale_nds = document.getElementById('sale_nds');
+    const sale_no_nds = document.getElementById('sale_no_nds');
+    const purchase_has_nds = document.getElementById('purchase_has_nds');
+    const sale_has_nds = document.getElementById('sale_has_nds');
+
+    const res_purchase_no_nds = document.getElementById('res_purchase_no_nds');
+    const res_sale_no_nds = document.getElementById('res_sale_no_nds');
+    const res_profit = document.getElementById('res_profit');
+    const res_profit_tax = document.getElementById('res_profit_tax');
+    const res_nds_sale = document.getElementById('res_nds_sale');
+    const res_nds_purchase = document.getElementById('res_nds_purchase');
+    const res_nds_payable = document.getElementById('res_nds_payable');
+    const res_total_tax = document.getElementById('res_total_tax');
+    const res_net_profit = document.getElementById('res_net_profit');
+
+    const helpPanel = document.getElementById('helpPanel');
+
+    // Функция безопасного преобразования
+    function parseFloatSafe(str) {
+        if (!str) return 0;
+        const cleaned = str.replace(',', '.').trim();
+        const val = parseFloat(cleaned);
+        return isNaN(val) ? 0 : val;
+    }
+
+    // Обновление состояний полей (активно/неактивно)
+    function updateInputStates() {
+        purchase_no_nds.disabled = purchase_has_nds.checked;
+        purchase_nds.disabled = !purchase_has_nds.checked;
+        sale_no_nds.disabled = sale_has_nds.checked;
+        sale_nds.disabled = !sale_has_nds.checked;
+    }
+
+    // Переключение режима для покупки
+    function togglePurchase() {
+        if (purchase_has_nds.checked) {
+            purchase_no_nds.value = '';
+        } else {
+            purchase_nds.value = '';
+        }
+        updateInputStates();
+        calculate();
+    }
+
+    // Переключение режима для продажи
+    function toggleSale() {
+        if (sale_has_nds.checked) {
+            sale_no_nds.value = '';
+        } else {
+            sale_nds.value = '';
+        }
+        updateInputStates();
+        calculate();
+    }
+
+    // Основной расчёт
+    function calculate() {
+        // Считываем значения из активных полей
+        let purchase_price_nds = parseFloatSafe(purchase_nds.value);
+        let purchase_price_no_nds = parseFloatSafe(purchase_no_nds.value);
+        let sale_price_nds = parseFloatSafe(sale_nds.value);
+        let sale_price_no_nds = parseFloatSafe(sale_no_nds.value);
+
+        // Если включён режим "цена с НДС" – вычисляем второе поле
+        if (purchase_has_nds.checked) {
+            if (purchase_price_nds > 0) {
+                purchase_price_no_nds = purchase_price_nds / (1 + NDS_RATE);
+                purchase_no_nds.value = purchase_price_no_nds.toFixed(2);
+            } else {
+                purchase_no_nds.value = '';
+                purchase_price_no_nds = 0;
+            }
+        } else {
+            if (purchase_price_no_nds > 0) {
+                purchase_price_nds = purchase_price_no_nds * (1 + NDS_RATE);
+                purchase_nds.value = purchase_price_nds.toFixed(2);
+            } else {
+                purchase_nds.value = '';
+                purchase_price_nds = 0;
+            }
+        }
+
+        if (sale_has_nds.checked) {
+            if (sale_price_nds > 0) {
+                sale_price_no_nds = sale_price_nds / (1 + NDS_RATE);
+                sale_no_nds.value = sale_price_no_nds.toFixed(2);
+            } else {
+                sale_no_nds.value = '';
+                sale_price_no_nds = 0;
+            }
+        } else {
+            if (sale_price_no_nds > 0) {
+                sale_price_nds = sale_price_no_nds * (1 + NDS_RATE);
+                sale_nds.value = sale_price_nds.toFixed(2);
+            } else {
+                sale_nds.value = '';
+                sale_price_nds = 0;
+            }
+        }
+
+        // Повторно считываем значения, чтобы использовать актуальные числа
+        purchase_price_no_nds = parseFloatSafe(purchase_no_nds.value);
+        sale_price_no_nds = parseFloatSafe(sale_no_nds.value);
+
+        // Расчёт
+        const profit = sale_price_no_nds - purchase_price_no_nds;
+        const profit_tax = Math.max(0, profit * PROFIT_TAX_RATE);
+
+        const nds_sale = sale_has_nds.checked ? sale_price_no_nds * NDS_RATE : 0;
+        const nds_purchase = purchase_has_nds.checked ? purchase_price_no_nds * NDS_RATE : 0;
+        const nds_payable = nds_sale - nds_purchase;
+
+        const net_profit = profit - profit_tax;
+        const total_tax = profit_tax + nds_payable;
+
+        // Вывод
+        res_purchase_no_nds.textContent = purchase_price_no_nds.toFixed(2);
+        res_sale_no_nds.textContent = sale_price_no_nds.toFixed(2);
+        res_profit.textContent = profit.toFixed(2);
+        res_profit_tax.textContent = profit_tax.toFixed(2);
+        res_nds_sale.textContent = nds_sale.toFixed(2);
+        res_nds_purchase.textContent = nds_purchase.toFixed(2);
+        res_nds_payable.textContent = nds_payable.toFixed(2);
+        res_total_tax.textContent = total_tax.toFixed(2);
+        res_net_profit.textContent = net_profit.toFixed(2);
+    }
+
+    // Сброс всех полей
+    function resetAll() {
+        purchase_nds.value = '';
+        purchase_no_nds.value = '';
+        sale_nds.value = '';
+        sale_no_nds.value = '';
+        purchase_has_nds.checked = true;
+        sale_has_nds.checked = true;
+        updateInputStates();
+        calculate();
+    }
+
+    // Показать/скрыть справку
+    function toggleHelp() {
+        if (helpPanel.style.display === 'none') {
+            helpPanel.style.display = 'block';
+        } else {
+            helpPanel.style.display = 'none';
+        }
+    }
+
+    // Инициализация при загрузке
+    updateInputStates();
+    calculate();
+</script>
+</body>
+</html>
